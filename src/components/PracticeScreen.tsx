@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   ArrowLeft,
   ArrowRight,
@@ -139,9 +139,28 @@ export function PracticeScreen({
     ro.observe(el)
     return () => ro.disconnect()
   }, [session.phase])
+  // THIRD trigger (2026-11-22, real phone): input focus on a touch
+  // device. On the user's Brave + Sogou keyboard the keyboard does NOT
+  // shrink the visual viewport at all — no resize event fires, --vv
+  // stays at full height, so NEITHER measurement trigger above can
+  // fire. But focus is deterministic: on a phone, a focused input
+  // means the keyboard is open (or about to be), so the compact card
+  // is the right call. Desktop (fine pointer) is unaffected — a mouse
+  // click there does not mean a keyboard is covering the screen.
+  // The input is auto-focused during practice, so on phones the
+  // compact card stays on for the whole session; dismissing the
+  // keyboard blurs the input and the full card returns.
+  const [inputFocused, setInputFocused] = useState(false)
+  const isCoarsePointer = useMemo(
+    () =>
+      typeof window !== 'undefined' &&
+      window.matchMedia('(pointer: coarse)').matches,
+    [],
+  )
   const compact =
     (vvHeight > 0 && vvHeight < COMPACT_VV_HEIGHT) ||
-    (areaHeight > 0 && areaHeight < COMPACT_AREA_HEIGHT)
+    (areaHeight > 0 && areaHeight < COMPACT_AREA_HEIGHT) ||
+    (inputFocused && isCoarsePointer)
 
   // Refocus the fresh input whenever the word changes.
   useEffect(() => {
@@ -338,6 +357,8 @@ export function PracticeScreen({
           }}
           placeholder={word.hint}
           autoFocus
+          onFocus={() => setInputFocused(true)}
+          onBlur={() => setInputFocused(false)}
           autoCapitalize={adapter.inputProps.autoCapitalize}
           autoCorrect={adapter.inputProps.autoCorrect}
           spellCheck={adapter.inputProps.spellCheck}

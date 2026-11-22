@@ -3,7 +3,12 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <!-- interactive-widget=resizes-content (2026-11-22, real phone):
+         when the on-screen keyboard opens, shrink the LAYOUT viewport
+         instead of overlaying it, so the app reflows to the visible
+         area and the viewport/area measurements stay truthful.
+         Ignored by browsers that do not support it. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content" />
     <meta name="theme-color" content="#ffffff" />
     <title>打字練習 Typing Trainer — 粵語 · 韓文 · 西班牙文</title>
   </head>
