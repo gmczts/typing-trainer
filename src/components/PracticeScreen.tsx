@@ -9,6 +9,7 @@ import {
   Shuffle,
 } from 'lucide-react'
 import { usePractice } from '../hooks/usePractice'
+import { useVisualViewportHeight } from '../hooks/useVisualViewport'
 import type { LanguageAdapter, WordView } from '../core/types'
 import { levelCountFor } from '../core/types'
 import { cn } from '../lib/utils'
@@ -16,25 +17,50 @@ import { Button } from './ui/button'
 import { Input } from './ui/input'
 import { Progress } from './ui/progress'
 
-function toneClass(tone: WordView['above'][number]['tone']): string {
+/**
+ * Secondary-line styling, colour-coded by role (readability pass):
+ * - Jyutping / Romanization: orange-red brand (user preference), kept.
+ * - Mandarin pinyin: its own teal (teal-700 light / teal-300 dark, both
+ *   AA on the card; Memphis uses a darker teal via .tone-pinyin).
+ * - Gloss: strong foreground colour.
+ * - Example: readable secondary (muted) tone.
+ * - Prompt / breakdown: violet accent (distinct from all the above).
+ * Secondary lines use font-medium so strokes read clearly on phones.
+ * Sizes are one step up from before; compact mode keeps them smaller.
+ */
+function toneClass(tone: WordView['above'][number]['tone'], compact = false): string {
   switch (tone) {
     case 'jyutping':
     case 'roman':
       // User preference: Jyutping / Romanization ENLARGED and orange-red.
-      return 'text-3xl sm:text-4xl font-bold text-brand dark:text-brand-dark tracking-wide'
+      return compact
+        ? 'text-xl font-bold text-brand dark:text-brand-dark tracking-wide'
+        : 'text-3xl sm:text-4xl font-bold text-brand dark:text-brand-dark tracking-wide'
     case 'pinyin':
-      // Mandarin pinyin SMALLER and grey.
-      return 'text-sm text-muted-foreground'
+      // Mandarin pinyin SMALLER than Jyutping, in its own teal.
+      return compact
+        ? 'tone-pinyin text-sm font-medium text-teal-700 dark:text-teal-300'
+        : 'tone-pinyin text-base font-medium text-teal-700 dark:text-teal-300'
     case 'gloss':
-      return 'text-base sm:text-lg font-medium'
+      return compact ? 'text-base font-medium' : 'text-lg sm:text-xl font-medium'
     case 'gloss2':
-      return 'text-sm text-muted-foreground'
+      return compact
+        ? 'text-sm text-muted-foreground'
+        : 'text-base text-muted-foreground'
     case 'example':
-      return 'text-sm text-muted-foreground leading-relaxed'
+      return compact
+        ? 'text-sm font-medium text-muted-foreground leading-relaxed'
+        : 'text-base font-medium text-muted-foreground leading-relaxed'
     case 'muted':
-      return 'text-xs text-muted-foreground'
+      return compact ? 'text-xs text-muted-foreground' : 'text-sm text-muted-foreground'
   }
 }
+
+/** Visual-viewport height below which the practice screen switches to
+ *  its compact word card (keyboard open on a phone). 600px covers the
+ *  keyboard-open heights seen on Android (~390–460px) with headroom;
+ *  at 600px the full card is borderline, so compact is the safe side. */
+const COMPACT_VV_HEIGHT = 600
 
 export interface PracticeScreenProps {
   adapter: LanguageAdapter
@@ -80,6 +106,15 @@ export function PracticeScreen({
   const inputRef = useRef<HTMLInputElement>(null)
   const word = session.word
   const totalLevels = levelCountFor(adapter.words.length)
+  // Compact card while the keyboard is open: the visual viewport is
+  // short, so shrink the word card (smaller word/Jyutping, example
+  // sentence and breakdown hidden) so the WORD stays fully visible
+  // above the keyboard with no scrolling. Driven by the visual
+  // viewport height (not a CSS media query — media queries use the
+  // layout viewport, which does not shrink when the keyboard opens).
+  // vvHeight is 0 on the very first render: treat that as not compact.
+  const vvHeight = useVisualViewportHeight()
+  const compact = vvHeight > 0 && vvHeight < COMPACT_VV_HEIGHT
 
   // Refocus the fresh input whenever the word changes.
   useEffect(() => {
@@ -178,12 +213,12 @@ export function PracticeScreen({
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div className="min-w-0 flex-1">
-          <div className="truncate text-sm font-semibold">
+          <div className="truncate text-base font-semibold">
             {adapter.name} · 第 {level} 課
           </div>
           <Progress value={((session.index + (session.justCorrect ? 1 : 0)) / session.order.length) * 100} className="mt-1 h-1.5" />
         </div>
-        <span className="shrink-0 text-sm tabular-nums text-muted-foreground">
+        <span className="shrink-0 text-base font-medium tabular-nums text-muted-foreground">
           {session.index + 1}/{session.order.length}
         </span>
         <Button
@@ -203,29 +238,38 @@ export function PracticeScreen({
         <div key={session.shakeKey} className={session.shakeKey > 0 ? 'animate-shake' : ''}>
         <div
           className={cn(
-            'animate-pop rounded-xl border bg-card p-4 text-center shadow sm:p-5',
+            'animate-pop rounded-xl border bg-card text-center shadow',
+            compact ? 'p-3' : 'p-4 sm:p-5',
             session.justCorrect && 'border-green-500/60',
           )}
         >
           <div className="space-y-1">
             {word.above.map((line, i) => (
-              <div key={i} className={toneClass(line.tone)}>
+              <div key={i} className={toneClass(line.tone, compact)}>
                 {line.text}
               </div>
             ))}
           </div>
-          <div className="py-2 text-6xl font-bold leading-tight tracking-wide sm:text-7xl">
+          <div
+            className={cn(
+              'font-bold leading-tight tracking-wide',
+              compact ? 'py-1 text-4xl' : 'py-2 text-6xl sm:text-7xl',
+            )}
+          >
             {word.display}
           </div>
-          <div className="space-y-1.5">
-            {word.below.map((line, i) => (
-              <div key={i} className={toneClass(line.tone)}>
+          <div className={compact ? 'space-y-1' : 'space-y-1.5'}>
+            {(compact
+              ? word.below.filter((line) => line.tone !== 'example')
+              : word.below
+            ).map((line, i) => (
+              <div key={i} className={toneClass(line.tone, compact)}>
                 {line.text}
               </div>
             ))}
           </div>
-          {word.prompt && (
-            <div className="mt-3 rounded-lg bg-muted px-3 py-1.5 font-mono text-sm text-muted-foreground">
+          {word.prompt && !compact && (
+            <div className="mt-3 rounded-lg bg-muted px-3 py-1.5 font-mono text-base font-medium text-violet-700 dark:text-violet-300">
               {word.promptLabel ? `${word.promptLabel}：` : ''}
               {word.prompt}
             </div>
@@ -241,11 +285,18 @@ export function PracticeScreen({
         )}
       </div>
 
-      {/* Input — pinned at the bottom of the visible area */}
+      {/* Input — pinned at the bottom of the visible area.
+          autoComplete="off" + neutral name/id: mobile browsers must NOT
+          treat this as a credential field (Brave showed a
+          password-manager key icon over it). type="text" explicit. */}
       <div className="mt-3 shrink-0">
         <Input
           key={`${adapter.id}:${level}:${sessionId}:${session.index}`}
           ref={inputRef}
+          id="typing-answer"
+          name="typing-answer"
+          type="text"
+          autoComplete="off"
           value={value}
           onChange={(e) => handleChange(e.target.value)}
           onKeyDown={handleKeyDown}
@@ -263,13 +314,33 @@ export function PracticeScreen({
           lang={adapter.inputProps.lang}
           aria-label="輸入答案"
           className={cn(
-            'h-12 text-center text-lg tracking-wider',
+            // Bigger on purpose (mobile h-14, desktop h-20) — the input
+            // is the main touch target while typing. The placeholder
+            // shows the same hint code as the hint line below, in the
+            // prominent brand colour. md:text-2xl is needed because the
+            // base Input sets md:text-sm, which would otherwise shrink
+            // the text back to 14px on desktop widths.
+            'practice-input h-14 text-center text-xl tracking-wider sm:h-20 sm:text-2xl md:text-2xl placeholder:font-semibold placeholder:text-brand dark:placeholder:text-brand-dark',
             session.justCorrect && 'border-green-500 ring-2 ring-green-500/40',
           )}
         />
-        <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
+        <div className="mt-2 flex items-center justify-between text-sm font-medium text-muted-foreground sm:text-base">
           <span>
-            {hintUsed ? `答案：${word.answer}` : `提示：${word.hint}`}
+            {hintUsed ? (
+              <>
+                答案：
+                <span className="font-semibold text-brand sm:text-lg dark:text-brand-dark">
+                  {word.answer}
+                </span>
+              </>
+            ) : (
+              <>
+                提示：
+                <span className="font-semibold text-brand sm:text-lg dark:text-brand-dark">
+                  {word.hint}
+                </span>
+              </>
+            )}
           </span>
           <Button
             variant="ghost"

@@ -1,5 +1,9 @@
 /* Futura ships only on Apple systems — Jost covers everyone else. */
 @import url("https://fonts.googleapis.com/css2?family=Jost:wght@400;700;900&display=swap");
+/* Noto Sans TC: a clean, consistent, highly legible Chinese face on all
+   devices (Android has no PingFang / Microsoft JhengHei). Google Fonts
+   serves it subsetted by unicode-range, so only needed subsets load. */
+@import url("https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap");
 @import "tailwindcss";
 
 @custom-variant dark (&:where(.dark, .dark *));
@@ -45,7 +49,10 @@
 }
 
 @theme inline {
-  --font-sans: system-ui, "Segoe UI", Roboto, "PingFang HK", "Microsoft JhengHei", sans-serif;
+  /* Noto Sans TC sits after the system fonts (Latin resolves there) but
+     before PingFang / Microsoft JhengHei, so CJK renders in Noto on
+     every device — including Android, which has neither of those. */
+  --font-sans: system-ui, "Segoe UI", Roboto, "Noto Sans TC", "PingFang HK", "Microsoft JhengHei", sans-serif;
   /* Brand orange-red — used for Jyutping / Romanization (user preference) */
   --color-brand: #e0452a;
   --color-brand-dark: #ff6b4a;
@@ -82,9 +89,37 @@ body,
   height: 100%;
 }
 
+html {
+  /* The page background must match the theme: the app shell is only
+     --vv tall, so when the keyboard opens the area below it (still
+     inside the layout viewport) shows the page background. Left
+     unset it defaults to white — the white band seen under the
+     practice screen in dark mode. --background follows the theme
+     (:root / .dark / Memphis paper). */
+  background-color: var(--background);
+}
+
 body {
   font-family: var(--font-sans);
   -webkit-tap-highlight-color: transparent;
+  background-color: var(--background);
+}
+
+/* Pinyin role colour under Memphis: teal-700 is only ~3.7:1 on the
+   yellow card, so Memphis uses a darker teal (#0b4f4a, ~6:1). */
+[data-theme="memphis"] .tone-pinyin {
+  color: #0b4f4a;
+}
+
+/* Practice input placeholder: full opacity + brand colour (the hint
+   code), so it reads as a hint, not greyed-out filler. */
+.practice-input::placeholder {
+  opacity: 1;
+}
+[data-theme="memphis"] .practice-input::placeholder {
+  /* Tailwind inlines #e0452a into placeholder:text-brand, so the
+     Memphis deeper red needs this direct rule (same as .text-brand). */
+  color: #b62e14;
 }
 
 @keyframes shake-x {
@@ -156,7 +191,7 @@ body {
      card background, so Memphis uses a deeper red (still orange-red,
      still the user's preferred Jyutping / Romanization colour). */
   --color-brand: #b62e14;
-  --font-sans: "Futura", "Jost", "League Spartan", "Avenir Next", "PingFang HK",
+  --font-sans: "Futura", "Jost", "League Spartan", "Avenir Next", "Noto Sans TC", "PingFang HK",
     "Microsoft JhengHei", system-ui, sans-serif;
 }
 
