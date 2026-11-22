@@ -26,22 +26,47 @@ export function saveProgress(lang: LanguageId, progress: LanguageProgress): void
   }
 }
 
-/** Dark-mode preference (not per-language). */
+/** App theme: light / dark / memphis (Memphis Design). */
+export type Theme = 'light' | 'dark' | 'memphis'
+
+/** Theme preference (not per-language). */
 const THEME_KEY = `${PREFIX}:theme`
 
-export function loadTheme(): 'light' | 'dark' {
+export function loadTheme(): Theme {
   try {
     const saved = localStorage.getItem(THEME_KEY)
-    if (saved === 'dark' || saved === 'light') return saved
+    if (saved === 'dark' || saved === 'light' || saved === 'memphis') return saved
   } catch {
     // ignore
   }
   return window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
 }
 
-export function saveTheme(theme: 'light' | 'dark'): void {
+export function saveTheme(theme: Theme): void {
   try {
     localStorage.setItem(THEME_KEY, theme)
+  } catch {
+    // ignore
+  }
+}
+
+/** The light/dark theme Memphis was toggled from, so toggling Memphis
+ *  off restores it. */
+const THEME_PREV_KEY = `${PREFIX}:theme-prev`
+
+export function loadPrevTheme(): 'light' | 'dark' {
+  try {
+    const saved = localStorage.getItem(THEME_PREV_KEY)
+    if (saved === 'dark' || saved === 'light') return saved
+  } catch {
+    // ignore
+  }
+  return 'light'
+}
+
+export function savePrevTheme(theme: 'light' | 'dark'): void {
+  try {
+    localStorage.setItem(THEME_PREV_KEY, theme)
   } catch {
     // ignore
   }

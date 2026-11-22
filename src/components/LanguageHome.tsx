@@ -83,15 +83,15 @@ export function LanguageHome({ adapter, onBack }: LanguageHomeProps) {
         <Button variant="ghost" size="icon" onClick={onBack} aria-label="返主頁">
           <ArrowLeft className="h-5 w-5" />
         </Button>
-        <h1 className="text-xl font-bold">
+        <h1 className="text-2xl font-bold">
           {adapter.name}
-          <span className="ml-2 text-sm font-normal text-muted-foreground">
+          <span className="ml-2 text-base font-normal text-muted-foreground">
             {adapter.englishName}
           </span>
         </h1>
         {adapter.isStub && <Badge variant="secondary">試行版詞庫</Badge>}
       </div>
-      <p className="mt-1 text-sm text-muted-foreground">{adapter.tagline}</p>
+      <p className="mt-1 text-base text-muted-foreground">{adapter.tagline}</p>
 
       {adapter.isStub && (
         <Card className="mt-3 border-yellow-500/50 bg-yellow-500/10">
@@ -109,7 +109,7 @@ export function LanguageHome({ adapter, onBack }: LanguageHomeProps) {
             type="button"
             onClick={() => setTab(id)}
             className={cn(
-              'flex flex-1 items-center justify-center gap-1 rounded-md px-2 py-2 text-sm font-medium transition-colors',
+              'flex flex-1 items-center justify-center gap-1 rounded-md px-2 py-2 text-base font-medium transition-colors',
               tab === id ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground',
             )}
             aria-current={tab === id ? 'true' : undefined}
@@ -124,10 +124,10 @@ export function LanguageHome({ adapter, onBack }: LanguageHomeProps) {
         {tab === 'practice' && (
           <div className="space-y-4">
             <Card>
-              <CardContent className="p-4">
+              <CardContent className="p-5">
                 <div className="flex items-baseline justify-between">
-                  <span className="text-sm text-muted-foreground">已完成</span>
-                  <span className="text-sm font-semibold">
+                  <span className="text-base text-muted-foreground">已完成</span>
+                  <span className="text-base font-semibold">
                     {progress.completedLevels.length} / {totalLevels} 課
                   </span>
                 </div>
@@ -149,7 +149,7 @@ export function LanguageHome({ adapter, onBack }: LanguageHomeProps) {
                     繼續
                   </Button>
                 </div>
-                <label className="mt-3 flex cursor-pointer items-center justify-between text-sm">
+                <label className="mt-3 flex cursor-pointer items-center justify-between text-base">
                   <span>隨機順序</span>
                   <button
                     type="button"
@@ -172,7 +172,7 @@ export function LanguageHome({ adapter, onBack }: LanguageHomeProps) {
               </CardContent>
             </Card>
             <div>
-              <h2 className="mb-2 text-sm font-semibold text-muted-foreground">
+              <h2 className="mb-2 text-base font-semibold text-muted-foreground">
                 全部課數（撳一課即練）
               </h2>
               <LevelGrid

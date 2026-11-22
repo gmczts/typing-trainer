@@ -21,7 +21,7 @@ function toneClass(tone: WordView['above'][number]['tone']): string {
     case 'jyutping':
     case 'roman':
       // User preference: Jyutping / Romanization ENLARGED and orange-red.
-      return 'text-2xl sm:text-3xl font-bold text-brand dark:text-brand-dark tracking-wide'
+      return 'text-3xl sm:text-4xl font-bold text-brand dark:text-brand-dark tracking-wide'
     case 'pinyin':
       // Mandarin pinyin SMALLER and grey.
       return 'text-sm text-muted-foreground'
@@ -214,7 +214,7 @@ export function PracticeScreen({
               </div>
             ))}
           </div>
-          <div className="py-2 text-5xl font-bold leading-tight tracking-wide sm:text-6xl">
+          <div className="py-2 text-6xl font-bold leading-tight tracking-wide sm:text-7xl">
             {word.display}
           </div>
           <div className="space-y-1.5">

@@ -1,3 +1,5 @@
+/* Futura ships only on Apple systems — Jost covers everyone else. */
+@import url("https://fonts.googleapis.com/css2?family=Jost:wght@400;700;900&display=swap");
 @import "tailwindcss";
 
 @custom-variant dark (&:where(.dark, .dark *));
@@ -114,4 +116,183 @@ body {
 .thin-scroll::-webkit-scrollbar-thumb {
   background: color-mix(in srgb, currentColor 25%, transparent);
   border-radius: 999px;
+}
+
+/* ------------------------------------------------------------------ */
+/* Memphis Design theme — scoped to [data-theme="memphis"] on <html>,  */
+/* mirroring how .dark works. Palette: pink #FF71CE, yellow #FFCE5C,   */
+/* teal #86CCCA, periwinkle #6A7BB4, coral #FF6B6B, aqua #4ECDC4,      */
+/* paper #FFFEF7. Bright colors are used for backgrounds / borders /   */
+/* large display type only; body text stays #111 on paper (WCAG AA).   */
+/* ------------------------------------------------------------------ */
+
+[data-theme="memphis"] {
+  --memphis-pink: #ff71ce;
+  --memphis-yellow: #ffce5c;
+  --memphis-teal: #86ccca;
+  --memphis-periwinkle: #6a7bb4;
+  --memphis-coral: #ff6b6b;
+  --memphis-aqua: #4ecdc4;
+  --memphis-paper: #fffef7;
+
+  --background: #fffef7;
+  --foreground: #111111;
+  --card: #ffce5c;
+  --card-foreground: #111111;
+  --primary: #ff71ce;
+  --primary-foreground: #111111;
+  --secondary: #86ccca;
+  --secondary-foreground: #111111;
+  --muted: #fdf3c4;
+  --muted-foreground: #3f3f46;
+  --accent: #4ecdc4;
+  --accent-foreground: #111111;
+  --destructive: #ff6b6b;
+  --destructive-foreground: #111111;
+  --border: #111111;
+  --input: #111111;
+  --ring: #6a7bb4;
+  /* Darker brand red: the default orange-red is only ~2.8:1 on the yellow
+     card background, so Memphis uses a deeper red (still orange-red,
+     still the user's preferred Jyutping / Romanization colour). */
+  --color-brand: #b62e14;
+  --font-sans: "Futura", "Jost", "League Spartan", "Avenir Next", "PingFang HK",
+    "Microsoft JhengHei", system-ui, sans-serif;
+}
+
+/* Confetti dot pattern on the paper background (body + app shell) —
+   v2: much sparser and fainter (48px grid, 1.5px dots at ~35% alpha)
+   so the page reads as clean paper with only a whisper of pattern. */
+[data-theme="memphis"] body,
+[data-theme="memphis"] .app-shell {
+  background-color: var(--memphis-paper);
+  background-image: radial-gradient(
+    color-mix(in srgb, var(--memphis-periwinkle) 35%, transparent) 1.5px,
+    transparent 1.5px
+  );
+  background-size: 48px 48px;
+  color: #111111;
+}
+
+/* Darker brand red for Jyutping / Romanization: Tailwind inlines the
+   literal #e0452a into .text-brand (see @theme inline), so the
+   --color-brand variable override above cannot reach it — this direct
+   rule does. #b62e14 is ~4.2:1 on the yellow card (AA). */
+[data-theme="memphis"] .text-brand {
+  color: #b62e14;
+}
+
+/* Darker secondary text for readability: #3f3f46 (zinc-700) instead of
+   the pale default muted gray. Direct rule as well as the variable
+   override above, in case the utility was inlined at build time. */
+[data-theme="memphis"] .text-muted-foreground {
+  color: #3f3f46;
+}
+
+/* Progress track: a darker neutral so the pink fill reads clearly on
+   both the yellow and teal cards (the default track is pink at 20%). */
+[data-theme="memphis"] [role="progressbar"] {
+  background-color: rgb(0 0 0 / 0.18);
+}
+
+/* Chunky display headings. */
+[data-theme="memphis"] h1,
+[data-theme="memphis"] h2 {
+  font-weight: 900;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+/* Cards everywhere: 4px black border, hard offset shadow, no rounding. */
+[data-theme="memphis"] .card {
+  border: 4px solid #000000;
+  border-radius: 0;
+  box-shadow: 8px 8px 0 #000000;
+}
+
+/* Home-screen language cards: alternate yellow / teal, slight tilt. */
+[data-theme="memphis"] .memphis-home-card {
+  background: var(--memphis-yellow);
+  border: 4px solid #000000;
+  border-radius: 0;
+  box-shadow: 10px 10px 0 #000000;
+  transform: rotate(-1.5deg);
+}
+[data-theme="memphis"] .memphis-home-list > button:nth-child(even) .memphis-home-card {
+  background: var(--memphis-teal);
+  transform: rotate(1.5deg);
+}
+[data-theme="memphis"] .memphis-home-card:hover {
+  box-shadow: 10px 10px 0 #000000;
+}
+
+/* Home-screen logo tile: chunky + tilted. */
+[data-theme="memphis"] .memphis-logo {
+  background: var(--memphis-pink);
+  color: #111111;
+  border: 3px solid #000000;
+  border-radius: 0;
+  box-shadow: 5px 5px 0 #000000;
+  transform: rotate(-3deg);
+}
+
+/* Chunky buttons (filled/bordered variants only — ghost/link buttons and
+   the small level-grid cells are excluded by the marker class in
+   button.tsx): 3px black border, hard periwinkle shadow, press effect. */
+[data-theme="memphis"] .memphis-btn {
+  border: 3px solid #000000;
+  border-radius: 0;
+  font-weight: 900;
+  box-shadow: 6px 6px 0 var(--memphis-periwinkle);
+  transition:
+    transform 100ms ease,
+    box-shadow 100ms ease,
+    color 150ms ease,
+    background-color 150ms ease,
+    border-color 150ms ease;
+}
+[data-theme="memphis"] .memphis-btn:active {
+  transform: translate(4px, 4px);
+  box-shadow: 2px 2px 0 var(--memphis-periwinkle);
+}
+[data-theme="memphis"] .memphis-btn:focus-visible {
+  outline: 4px dashed #000000;
+  outline-offset: 6px;
+  box-shadow: 6px 6px 0 var(--memphis-periwinkle);
+}
+
+/* Decorative Memphis shapes (home screen only, aria-hidden, in flow). */
+[data-theme="memphis"] .memphis-decor {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1rem;
+  opacity: 0.9;
+}
+[data-theme="memphis"] .memphis-decor .shape-triangle {
+  width: 27px;
+  height: 24px;
+  background: var(--memphis-aqua);
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+  transform: rotate(-8deg);
+}
+[data-theme="memphis"] .memphis-decor .shape-stripes {
+  width: 48px;
+  height: 11px;
+  background: repeating-linear-gradient(45deg, #000000 0 5px, transparent 5px 10px);
+  transform: rotate(2deg);
+}
+[data-theme="memphis"] .memphis-decor .shape-squiggle {
+  width: 48px;
+  height: 12px;
+  transform: rotate(-2deg);
+}
+
+/* Respect reduced-motion: disable the shake / pop animations. */
+@media (prefers-reduced-motion: reduce) {
+  .animate-shake,
+  .animate-pop {
+    animation: none;
+  }
 }

@@ -36,8 +36,22 @@ export interface ButtonProps
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, asChild = false, ...props }, ref) => {
     const Comp = asChild ? Slot : 'button'
+    // Chunky Memphis treatment (see index.css) applies to filled/bordered
+    // buttons only — ghost/link buttons and the small level-grid cells
+    // keep their flat look.
+    const resolvedVariant = variant ?? 'default'
+    const resolvedSize = size ?? 'default'
+    const chunky =
+      resolvedVariant !== 'ghost' && resolvedVariant !== 'link' && resolvedSize !== 'sm'
     return (
-      <Comp className={cn(buttonVariants({ variant, size, className }))} ref={ref} {...props} />
+      <Comp
+        className={cn(
+          buttonVariants({ variant, size, className }),
+          chunky && 'memphis-btn',
+        )}
+        ref={ref}
+        {...props}
+      />
     )
   },
 )
