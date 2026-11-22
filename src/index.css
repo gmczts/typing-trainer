@@ -4,6 +4,10 @@
    devices (Android has no PingFang / Microsoft JhengHei). Google Fonts
    serves it subsetted by unicode-range, so only needed subsets load. */
 @import url("https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap");
+/* Atkinson Hyperlegible: designed for maximum letter distinction
+   (i / j / l / 1 are unmistakable) — the practice hints are mostly
+   short Latin codes, so this is the face that matters most. */
+@import url("https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap");
 @import "tailwindcss";
 
 @custom-variant dark (&:where(.dark, .dark *));
@@ -49,10 +53,9 @@
 }
 
 @theme inline {
-  /* Noto Sans TC sits after the system fonts (Latin resolves there) but
-     before PingFang / Microsoft JhengHei, so CJK renders in Noto on
-     every device — including Android, which has neither of those. */
-  --font-sans: system-ui, "Segoe UI", Roboto, "Noto Sans TC", "PingFang HK", "Microsoft JhengHei", sans-serif;
+  /* Atkinson Hyperlegible first: Latin resolves there (i / j / l are
+     unmistakable), CJK falls through to Noto Sans TC. */
+  --font-sans: "Atkinson Hyperlegible", system-ui, "Segoe UI", Roboto, "Noto Sans TC", "PingFang HK", "Microsoft JhengHei", sans-serif;
   /* Brand orange-red — used for Jyutping / Romanization (user preference) */
   --color-brand: #e0452a;
   --color-brand-dark: #ff6b4a;
@@ -191,7 +194,7 @@ body {
      card background, so Memphis uses a deeper red (still orange-red,
      still the user's preferred Jyutping / Romanization colour). */
   --color-brand: #b62e14;
-  --font-sans: "Futura", "Jost", "League Spartan", "Avenir Next", "Noto Sans TC", "PingFang HK",
+  --font-sans: "Atkinson Hyperlegible", "Futura", "Jost", "League Spartan", "Avenir Next", "Noto Sans TC", "PingFang HK",
     "Microsoft JhengHei", system-ui, sans-serif;
 }
 
