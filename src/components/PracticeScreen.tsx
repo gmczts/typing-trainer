@@ -62,6 +62,17 @@ function toneClass(tone: WordView['above'][number]['tone'], compact = false): st
  *  at 600px the full card is borderline, so compact is the safe side. */
 const COMPACT_VV_HEIGHT = 600
 
+/** Card-area height below which the compact card is used. HARD LESSON
+ *  (2026-11-22, real phone): the visual-viewport height does NOT
+ *  always reflect the visible area — on the user's Brave + Sogou
+ *  keyboard the word was still clipped at full size while the viewport
+ *  reported >= 600px. So compact is ALSO driven by the card area's
+ *  own measured height (ResizeObserver): if the full card cannot fit
+ *  in the space the layout actually gives it, shrink it. The area
+ *  height comes from the flex-1 wrapper, which does not change when
+ *  the card shrinks, so this cannot oscillate. */
+const COMPACT_AREA_HEIGHT = 480
+
 export interface PracticeScreenProps {
   adapter: LanguageAdapter
   level: number
@@ -111,10 +122,26 @@ export function PracticeScreen({
   // sentence and breakdown hidden) so the WORD stays fully visible
   // above the keyboard with no scrolling. Driven by the visual
   // viewport height (not a CSS media query — media queries use the
-  // layout viewport, which does not shrink when the keyboard opens).
-  // vvHeight is 0 on the very first render: treat that as not compact.
+  // layout viewport, which does not shrink when the keyboard opens)
+  // AND by the card area's measured height (see COMPACT_AREA_HEIGHT —
+  // the viewport height alone proved unreliable on a real phone).
+  // vvHeight / areaHeight are 0 on the very first render: treat that
+  // as not compact.
   const vvHeight = useVisualViewportHeight()
-  const compact = vvHeight > 0 && vvHeight < COMPACT_VV_HEIGHT
+  const cardAreaRef = useRef<HTMLDivElement>(null)
+  const [areaHeight, setAreaHeight] = useState(0)
+  useEffect(() => {
+    const el = cardAreaRef.current
+    if (!el) return
+    const update = () => setAreaHeight(el.clientHeight)
+    update()
+    const ro = new ResizeObserver(update)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [session.phase])
+  const compact =
+    (vvHeight > 0 && vvHeight < COMPACT_VV_HEIGHT) ||
+    (areaHeight > 0 && areaHeight < COMPACT_AREA_HEIGHT)
 
   // Refocus the fresh input whenever the word changes.
   useEffect(() => {
@@ -233,7 +260,7 @@ export function PracticeScreen({
       </div>
 
       {/* Word card — scrolls if the screen is short */}
-      <div className="thin-scroll mt-3 flex-1 overflow-y-auto">
+      <div ref={cardAreaRef} className="thin-scroll mt-3 flex-1 overflow-y-auto">
         {/* keyed by shakeKey so the shake animation replays on every wrong answer */}
         <div key={session.shakeKey} className={session.shakeKey > 0 ? 'animate-shake' : ''}>
         <div
@@ -290,6 +317,10 @@ export function PracticeScreen({
           treat this as a credential field (Brave showed a
           password-manager key icon over it). type="text" explicit. */}
       <div className="mt-3 shrink-0">
+        {/* The form carries autoComplete="off" too: some mobile browsers
+            only honour the opt-out at form level. onSubmit is prevented —
+            Enter is already handled by the input's onKeyDown. */}
+        <form autoComplete="off" onSubmit={(e) => e.preventDefault()}>
         <Input
           key={`${adapter.id}:${level}:${sessionId}:${session.index}`}
           ref={inputRef}
@@ -324,6 +355,7 @@ export function PracticeScreen({
             session.justCorrect && 'border-green-500 ring-2 ring-green-500/40',
           )}
         />
+        </form>
         <div className="mt-2 flex items-center justify-between text-sm font-medium text-muted-foreground sm:text-base">
           <span>
             {hintUsed ? (
