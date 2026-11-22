@@ -56,6 +56,13 @@ export function LanguageHome({ adapter, onBack }: LanguageHomeProps) {
   if (practiceTarget) {
     return (
       <PracticeScreen
+        // Remount on level / focus-word change: usePractice initialises
+        // its session state once, so without this key a level change
+        // (e.g. summary "下一課") only changed the header text while
+        // the old session stayed on the summary screen (bug 2026-11-22).
+        // Random is deliberately NOT in the key: toggling it mid-lesson
+        // must not reset the current session.
+        key={`${practiceTarget.level}:${practiceTarget.focusWordId ?? ''}`}
         adapter={adapter}
         level={practiceTarget.level}
         random={random}
