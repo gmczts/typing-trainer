@@ -26,6 +26,9 @@ export function StatsView({ adapter, progress, onPracticeWord }: StatsViewProps)
       : Math.round((progress.totalCorrect / progress.totalAnswered) * 100)
   const totalLevels = Math.ceil(adapter.words.length / 10)
   const doneCount = progress.completedLevels.length
+  // Same <1% rule as the home card (review P2 #4).
+  const donePct = totalLevels === 0 ? 0 : (doneCount / totalLevels) * 100
+  const donePctLabel = donePct === 0 ? '0%' : donePct < 1 ? '＜1%' : `${Math.round(donePct)}%`
 
   const hardest = useMemo(() => {
     return Object.entries(progress.wrongWords)
@@ -84,7 +87,15 @@ export function StatsView({ adapter, progress, onPracticeWord }: StatsViewProps)
           <CardTitle className="text-base">整體進度</CardTitle>
         </CardHeader>
         <CardContent>
-          <Progress value={totalLevels === 0 ? 0 : (doneCount / totalLevels) * 100} />
+          <div className="flex items-center gap-2">
+            <Progress
+              value={donePct}
+              className="h-2.5 flex-1"
+            />
+            <span className="shrink-0 text-xs font-medium tabular-nums text-muted-foreground">
+              {donePctLabel}
+            </span>
+          </div>
           <p className="mt-2 text-xs text-muted-foreground">
             {progress.lastPlayed
               ? `上次練習：${formatDate(progress.lastPlayed)}`

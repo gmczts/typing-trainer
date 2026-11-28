@@ -8,47 +8,54 @@
    (i / j / l / 1 are unmistakable) — the practice hints are mostly
    short Latin codes, so this is the face that matters most. */
 @import url("https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap");
+/* Noto Serif TC: display face for headings only (v8, from the four
+   reference sites' warm-paper style). Body text stays Atkinson
+   Hyperlegible — readability first, the serif is decoration. */
+@import url("https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600;900&display=swap");
 @import "tailwindcss";
 
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  --background: #ffffff;
-  --foreground: #18181b;
-  --card: #ffffff;
-  --card-foreground: #18181b;
-  --primary: #18181b;
-  --primary-foreground: #fafafa;
-  --secondary: #f4f4f5;
-  --secondary-foreground: #18181b;
-  --muted: #f4f4f5;
-  --muted-foreground: #71717a;
-  --accent: #f4f4f5;
-  --accent-foreground: #18181b;
+  /* v8 warm paper (from the reference sites): cream background, warm
+     ink, soft warm borders. Body text stays near-black for contrast. */
+  --background: #fbfaf7;
+  --foreground: #1c1a17;
+  --card: #fffdf9;
+  --card-foreground: #1c1a17;
+  --primary: #1c1a17;
+  --primary-foreground: #faf8f2;
+  --secondary: #f4efe4;
+  --secondary-foreground: #1c1a17;
+  --muted: #f4efe4;
+  --muted-foreground: #6b6459;
+  --accent: #f4efe4;
+  --accent-foreground: #1c1a17;
   --destructive: #dc2626;
   --destructive-foreground: #fafafa;
-  --border: #e4e4e7;
-  --input: #e4e4e7;
-  --ring: #18181b;
+  --border: #e8e0cf;
+  --input: #ddd5c2;
+  --ring: #1c1a17;
 }
 
 .dark {
-  --background: #09090b;
-  --foreground: #fafafa;
-  --card: #18181b;
-  --card-foreground: #fafafa;
-  --primary: #fafafa;
-  --primary-foreground: #18181b;
-  --secondary: #27272a;
-  --secondary-foreground: #fafafa;
-  --muted: #27272a;
-  --muted-foreground: #a1a1aa;
-  --accent: #27272a;
-  --accent-foreground: #fafafa;
+  /* v8 warm charcoal: the dark side of the same paper palette. */
+  --background: #141413;
+  --foreground: #f2ede3;
+  --card: #1e1e1c;
+  --card-foreground: #f2ede3;
+  --primary: #f2ede3;
+  --primary-foreground: #141413;
+  --secondary: #2a2a26;
+  --secondary-foreground: #f2ede3;
+  --muted: #2a2a26;
+  --muted-foreground: #a9a294;
+  --accent: #2a2a26;
+  --accent-foreground: #f2ede3;
   --destructive: #dc2626;
   --destructive-foreground: #fafafa;
-  --border: #27272a;
-  --input: #27272a;
+  --border: #35352f;
+  --input: #35352f;
   --ring: #d4d4d8;
 }
 
@@ -144,6 +151,38 @@ body {
 
 .animate-pop {
   animation: pop-in 0.18s ease-out;
+}
+
+/* v8 display face — serif headings (Noto Serif TC), body text stays
+   Atkinson Hyperlegible. Memphis keeps its own display style. */
+.font-display {
+  font-family: "Noto Serif TC", "Songti SC", Georgia, serif;
+}
+[data-theme="memphis"] .font-display {
+  font-family: inherit;
+}
+
+/* v8 flashcard flip (from the reference sites' 3D flip cards). */
+.flip-scene {
+  perspective: 1400px;
+}
+.flip-card {
+  position: relative;
+  width: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.45s cubic-bezier(0.2, 0.7, 0.25, 1);
+}
+.flip-card.flipped {
+  transform: rotateY(180deg);
+}
+.flip-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+.flip-face.back {
+  transform: rotateY(180deg);
 }
 
 /* Thin scrollbars for the level grid / dictionary lists */
@@ -327,10 +366,13 @@ body {
   transform: rotate(-2deg);
 }
 
-/* Respect reduced-motion: disable the shake / pop animations. */
+/* Respect reduced-motion: disable the shake / pop / flip animations. */
 @media (prefers-reduced-motion: reduce) {
   .animate-shake,
   .animate-pop {
     animation: none;
+  }
+  .flip-card {
+    transition: none;
   }
 }

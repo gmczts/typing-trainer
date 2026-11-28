@@ -1,19 +1,22 @@
 import { useCallback, useState } from 'react'
-import { ArrowLeft, BookOpen, ChartBar, Keyboard, Play } from 'lucide-react'
+import { ArrowLeft, BookOpen, Bookmark, ChartBar, Keyboard, Layers, Play, Target } from 'lucide-react'
 import { loadProgress } from '../core/storage'
-import { levelCountFor, type LanguageAdapter, type LanguageProgress } from '../core/types'
+import { levelCountFor, type LanguageAdapter, type LanguageProgress, type WordView } from '../core/types'
 import { cn } from '../lib/utils'
 import { Badge } from './ui/badge'
 import { Button } from './ui/button'
 import { Card, CardContent } from './ui/card'
 import { Progress } from './ui/progress'
 import { DictionaryView } from './DictionaryView'
+import { FlashcardView } from './FlashcardView'
 import { KeymapView } from './KeymapView'
 import { LevelGrid } from './LevelGrid'
 import { PracticeScreen } from './PracticeScreen'
+import { QuizView } from './QuizView'
 import { StatsView } from './StatsView'
+import { WordBookView } from './WordBookView'
 
-export type LanguageTab = 'practice' | 'stats' | 'dictionary' | 'keymap'
+export type LanguageTab = 'practice' | 'flashcards' | 'quiz' | 'wordbook' | 'stats' | 'dictionary' | 'keymap'
 
 export interface LanguageHomeProps {
   adapter: LanguageAdapter
@@ -35,6 +38,8 @@ export function LanguageHome({ adapter, onBack }: LanguageHomeProps) {
   const [progress, setProgress] = useState<LanguageProgress>(() => loadProgress(adapter.id))
   const [random, setRandom] = useState(false)
   const [practiceTarget, setPracticeTarget] = useState<PracticeTarget | null>(null)
+  // Deck pushed in from the word book (flashcard review of one group).
+  const [flashDeck, setFlashDeck] = useState<{ words: WordView[]; title: string } | null>(null)
 
   const totalLevels = levelCountFor(adapter.words.length)
   const nextLevel =
@@ -79,6 +84,9 @@ export function LanguageHome({ adapter, onBack }: LanguageHomeProps) {
 
   const tabs: { id: LanguageTab; label: string; icon: typeof Play }[] = [
     { id: 'practice', label: '練習', icon: Play },
+    { id: 'flashcards', label: '閃卡', icon: Layers },
+    { id: 'quiz', label: '測驗', icon: Target },
+    { id: 'wordbook', label: '生詞本', icon: Bookmark },
     { id: 'stats', label: '統計', icon: ChartBar },
     { id: 'dictionary', label: '字典', icon: BookOpen },
     { id: 'keymap', label: '鍵盤', icon: Keyboard },
@@ -90,9 +98,9 @@ export function LanguageHome({ adapter, onBack }: LanguageHomeProps) {
         <Button variant="ghost" size="icon" onClick={onBack} aria-label="返主頁">
           <ArrowLeft className="h-5 w-5" />
         </Button>
-        <h1 className="text-2xl font-bold">
+        <h1 className="font-display text-2xl font-bold">
           {adapter.name}
-          <span className="ml-2 text-base font-normal text-muted-foreground">
+          <span className="ml-2 font-sans text-base font-normal text-muted-foreground">
             {adapter.englishName}
           </span>
         </h1>
@@ -108,23 +116,31 @@ export function LanguageHome({ adapter, onBack }: LanguageHomeProps) {
         </Card>
       )}
 
-      {/* Tab bar */}
-      <div className="mt-4 flex gap-1 rounded-lg bg-muted p-1">
-        {tabs.map(({ id, label, icon: Icon }) => (
-          <button
-            key={id}
-            type="button"
-            onClick={() => setTab(id)}
-            className={cn(
-              'flex flex-1 items-center justify-center gap-1 rounded-md px-2 py-2 text-base font-medium transition-colors',
-              tab === id ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground',
-            )}
-            aria-current={tab === id ? 'true' : undefined}
-          >
-            <Icon className="h-4 w-4" />
-            {label}
-          </button>
-        ))}
+      {/* Tab bar — scrolls horizontally on narrow phones (7 tabs).
+          The right-edge fade (phones only) hints more tabs hide
+          off-screen to the right (review P2 #8). */}
+      <div className="relative mt-4">
+        <div className="thin-scroll flex gap-1 overflow-x-auto rounded-lg bg-muted p-1">
+          {tabs.map(({ id, label, icon: Icon }) => (
+            <button
+              key={id}
+              type="button"
+              onClick={() => setTab(id)}
+              className={cn(
+                'flex shrink-0 items-center justify-center gap-1 whitespace-nowrap rounded-md px-3 py-2 text-base font-medium transition-colors',
+                tab === id ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground',
+              )}
+              aria-current={tab === id ? 'true' : undefined}
+            >
+              <Icon className="h-4 w-4" />
+              {label}
+            </button>
+          ))}
+        </div>
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-y-0 right-0 w-10 rounded-r-lg bg-gradient-to-l from-muted to-transparent md:hidden"
+        />
       </div>
 
       <div className="mt-4">
@@ -193,6 +209,25 @@ export function LanguageHome({ adapter, onBack }: LanguageHomeProps) {
               />
             </div>
           </div>
+        )}
+        {tab === 'flashcards' && (
+          <FlashcardView
+            adapter={adapter}
+            initialDeck={flashDeck}
+            onClearDeck={() => setFlashDeck(null)}
+            onPracticeWord={practiceWord}
+          />
+        )}
+        {tab === 'quiz' && <QuizView adapter={adapter} onPracticeWord={practiceWord} />}
+        {tab === 'wordbook' && (
+          <WordBookView
+            adapter={adapter}
+            onPracticeWord={practiceWord}
+            onFlashcardDeck={(deck) => {
+              setFlashDeck(deck)
+              setTab('flashcards')
+            }}
+          />
         )}
         {tab === 'stats' && (
           <StatsView adapter={adapter} progress={progress} onPracticeWord={practiceWord} />

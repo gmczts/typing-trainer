@@ -18,9 +18,12 @@ const buttonVariants = cva(
       },
       size: {
         default: 'h-9 px-4 py-2',
-        sm: 'h-8 rounded-md px-3 text-xs',
+        // Review P2 #9: touch targets ≥ 40px on coarse pointers
+        // (phones) — small buttons and icon buttons grow, desktop
+        // sizes are unchanged.
+        sm: 'h-8 rounded-md px-3 text-xs [@media(pointer:coarse)]:h-10',
         lg: 'h-10 rounded-md px-8',
-        icon: 'h-9 w-9',
+        icon: 'h-9 w-9 [@media(pointer:coarse)]:h-10 [@media(pointer:coarse)]:w-10',
       },
     },
     defaultVariants: { variant: 'default', size: 'default' },

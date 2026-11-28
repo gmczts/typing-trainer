@@ -65,6 +65,14 @@ export function KeymapView({ adapter }: KeymapViewProps) {
         </Card>
       )}
 
+      {adapter.keymapGroups.length === 0 && adapter.keyCards.length === 0 && (
+        <Card>
+          <CardContent className="p-4 text-sm text-muted-foreground">
+            呢種語言唔使記鍵位——直接打字就得，練習畫面會有提示。
+          </CardContent>
+        </Card>
+      )}
+
       {adapter.keymapGroups.map((group) => (
         <div key={group.title}>
           <h3 className="mb-1 font-semibold">{group.title}</h3>
@@ -83,12 +91,13 @@ export function KeymapView({ adapter }: KeymapViewProps) {
         </div>
       ))}
 
-      <div>
-        <h3 className="mb-1 font-semibold">認鍵記憶卡</h3>
-        <p className="mb-2 text-xs text-muted-foreground">
-          撳卡睇解釋，隨機抽卡當測驗。
-        </p>
-        {current && (
+      {cards.length > 0 && (
+        <div>
+          <h3 className="mb-1 font-semibold">認鍵記憶卡</h3>
+          <p className="mb-2 text-xs text-muted-foreground">
+            撳卡睇解釋，隨機抽卡當測驗。
+          </p>
+          {current && (
           <Card>
             <CardContent className="p-4">
               <button
@@ -141,7 +150,8 @@ export function KeymapView({ adapter }: KeymapViewProps) {
         <Button variant="ghost" size="sm" className="mt-2" onClick={() => { setOrder(cards.map((_, i) => i)); setCardIndex(0); setFlipped(false) }}>
           <RotateCcw className="h-3.5 w-3.5" /> 順序重設
         </Button>
-      </div>
+        </div>
+      )}
     </div>
   )
 }

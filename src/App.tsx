@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react'
 import { Moon, Palette, Sun } from 'lucide-react'
 import { useVisualViewport } from './hooks/useVisualViewport'
 import { loadPrevTheme, loadTheme, savePrevTheme, saveTheme, type Theme } from './core/storage'
-import type { LanguageId } from './core/types'
-import { getAdapter } from './languages'
+import type { LanguageAdapter, LanguageId } from './core/types'
+import { getCachedAdapter, loadAdapter } from './languages'
 import { HomeScreen } from './components/HomeScreen'
 import { LanguageHome } from './components/LanguageHome'
 import { Button } from './components/ui/button'
@@ -14,6 +14,27 @@ type Screen = { kind: 'home' } | { kind: 'language'; id: LanguageId }
 export default function App() {
   useVisualViewport()
   const [screen, setScreen] = useState<Screen>({ kind: 'home' })
+  // The adapter (word list) loads lazily per language (review P2 #10):
+  // the home screen needs no word data, so nothing is fetched until
+  // a language is opened. Revisits use the cached adapter with no
+  // loading flash.
+  const [adapter, setAdapter] = useState<LanguageAdapter | null>(null)
+  useEffect(() => {
+    if (screen.kind !== 'language') return
+    const cached = getCachedAdapter(screen.id)
+    if (cached) {
+      setAdapter(cached)
+      return
+    }
+    let cancelled = false
+    setAdapter(null)
+    loadAdapter(screen.id).then((a) => {
+      if (!cancelled) setAdapter(a)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [screen])
   const [theme, setTheme] = useState<Theme>(() => {
     // Preview links can force the Memphis theme: ?theme=memphis
     try {
@@ -87,12 +108,16 @@ export default function App() {
 
       {screen.kind === 'home' ? (
         <HomeScreen onSelect={(id) => setScreen({ kind: 'language', id })} memphis={memphis} />
-      ) : (
+      ) : adapter ? (
         <LanguageHome
           key={screen.id}
-          adapter={getAdapter(screen.id)}
+          adapter={adapter}
           onBack={() => setScreen({ kind: 'home' })}
         />
+      ) : (
+        <div className="mx-auto flex min-h-[var(--vv)] w-full max-w-2xl flex-col items-center justify-center px-4">
+          <p className="text-base text-muted-foreground">載入緊詞庫…</p>
+        </div>
       )}
     </div>
   )

@@ -26,6 +26,24 @@ export function saveProgress(lang: LanguageId, progress: LanguageProgress): void
   }
 }
 
+/** v8: set per-word mastery (0 unseen, 1 learning, 2 known). */
+export function setMastery(lang: LanguageId, wordId: string, level: number): void {
+  const p = loadProgress(lang)
+  p.mastery = { ...(p.mastery ?? {}), [wordId]: level }
+  saveProgress(lang, p)
+}
+
+/** v8: toggle a word's favourite star. Returns the new state. */
+export function toggleFavorite(lang: LanguageId, wordId: string): boolean {
+  const p = loadProgress(lang)
+  const favs = new Set(p.favorites ?? [])
+  if (favs.has(wordId)) favs.delete(wordId)
+  else favs.add(wordId)
+  p.favorites = [...favs]
+  saveProgress(lang, p)
+  return favs.has(wordId)
+}
+
 /** App theme: light / dark / memphis (Memphis Design). */
 export type Theme = 'light' | 'dark' | 'memphis'
 

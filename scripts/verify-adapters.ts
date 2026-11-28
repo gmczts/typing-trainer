@@ -6,6 +6,9 @@ import { cantoneseAdapter } from  '../src/languages/cantonese/adapter'
 import { koreanAdapter } from  '../src/languages/korean/adapter'
 import { spanishAdapter } from  '../src/languages/spanish/adapter'
 import { normalizeSpanish } from  '../src/languages/spanish/adapter'
+import { japaneseAdapter } from  '../src/languages/japanese/adapter'
+import { chineseAdapter } from  '../src/languages/chinese/adapter'
+import { LANGUAGE_META, META_BY_ID } from  '../src/languages/meta'
 import { jamoPrompt, decomposeSyllable } from  '../src/core/hangul'
 import { levelCountFor } from  '../src/core/types'
 
@@ -29,6 +32,31 @@ check('spanish 600 levels', levelCountFor(spanishAdapter.words.length) === 600)
 check('spanish not stub', spanishAdapter.isStub === false)
 check('cantonese not stub', cantoneseAdapter.isStub === false)
 check('korean not stub', koreanAdapter.isStub === false)
+check('japanese 544 items', japaneseAdapter.words.length === 544, `got ${japaneseAdapter.words.length}`)
+check('japanese 55 levels', levelCountFor(japaneseAdapter.words.length) === 55)
+check('japanese not stub', japaneseAdapter.isStub === false)
+check('chinese 6000 words', chineseAdapter.words.length === 6000, `got ${chineseAdapter.words.length}`)
+check('chinese 600 levels', levelCountFor(chineseAdapter.words.length) === 600)
+check('chinese not stub', chineseAdapter.isStub === false)
+
+console.log('== meta consistency (home screen renders from meta, not the adapters) ==')
+const adaptersById = {
+  cantonese: cantoneseAdapter,
+  korean: koreanAdapter,
+  spanish: spanishAdapter,
+  japanese: japaneseAdapter,
+  chinese: chineseAdapter,
+}
+check('meta has 5 languages', LANGUAGE_META.length === 5)
+for (const meta of LANGUAGE_META) {
+  const a = adaptersById[meta.id]
+  check(`${meta.id} meta name`, meta.name === a.name, `meta "${meta.name}" vs adapter "${a.name}"`)
+  check(`${meta.id} meta englishName`, meta.englishName === a.englishName, `meta "${meta.englishName}" vs adapter "${a.englishName}"`)
+  check(`${meta.id} meta color`, meta.color === a.color, `meta "${meta.color}" vs adapter "${a.color}"`)
+  check(`${meta.id} meta isStub`, meta.isStub === a.isStub)
+  check(`${meta.id} meta wordCount`, meta.wordCount === a.words.length, `meta ${meta.wordCount} vs adapter ${a.words.length}`)
+  check(`${meta.id} META_BY_ID matches`, META_BY_ID[meta.id] === meta)
+}
 
 console.log('== cantonese matching ==')
 const wo = cantoneseAdapter.words[0] // 我 ngo5 vo

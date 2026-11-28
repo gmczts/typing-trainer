@@ -278,10 +278,17 @@ export function PracticeScreen({
         </Button>
       </div>
 
-      {/* Word card — scrolls if the screen is short */}
-      <div ref={cardAreaRef} className="thin-scroll mt-3 flex-1 overflow-y-auto">
+      {/* Word card — scrolls if the screen is short. On desktop the
+          card is vertically centred in the free area (md:flex +
+          my-auto on the card): before this the card sat at the top
+          and ~55% of an 800px-tall screen was empty (review P2 #7).
+          my-auto (not justify-center) so a taller-than-area card
+          still scrolls from the top instead of clipping. Phones are
+          untouched — the area must stay full-height for the keyboard
+          compact triggers, which measure this element. */}
+      <div ref={cardAreaRef} className="thin-scroll mt-3 flex-1 overflow-y-auto md:flex md:flex-col">
         {/* keyed by shakeKey so the shake animation replays on every wrong answer */}
-        <div key={session.shakeKey} className={session.shakeKey > 0 ? 'animate-shake' : ''}>
+        <div key={session.shakeKey} className={cn(session.shakeKey > 0 && 'animate-shake', 'md:my-auto')}>
         <div
           className={cn(
             'animate-pop rounded-xl border bg-card text-center shadow',

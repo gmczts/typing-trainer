@@ -26,7 +26,7 @@ export function LevelGrid({ wordCount, completedLevels, currentLevel, onSelect }
             size="sm"
             onClick={() => onSelect(level)}
             className={cn(
-              'h-9 px-0 text-xs tabular-nums',
+              'h-9 px-0 text-xs tabular-nums [@media(pointer:coarse)]:h-10',
               isCurrent && 'ring-2 ring-primary',
               isDone && 'text-green-700 dark:text-green-400',
             )}

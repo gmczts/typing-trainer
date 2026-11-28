@@ -7,7 +7,7 @@
  * new folder + word list, no core changes.
  */
 
-export type LanguageId = 'cantonese' | 'korean' | 'spanish'
+export type LanguageId = 'cantonese' | 'korean' | 'spanish' | 'japanese' | 'chinese'
 
 export const WORDS_PER_LEVEL = 10
 
@@ -136,6 +136,10 @@ export interface LanguageProgress {
   totalCorrect: number
   totalSessions: number
   lastPlayed: string | null
+  /** v8: per-word mastery — 0 unseen (default), 1 learning, 2 known. */
+  mastery?: Record<string, number>
+  /** v8: favourited word ids. */
+  favorites?: string[]
 }
 
 export function emptyProgress(): LanguageProgress {
@@ -147,5 +151,7 @@ export function emptyProgress(): LanguageProgress {
     totalCorrect: 0,
     totalSessions: 0,
     lastPlayed: null,
+    mastery: {},
+    favorites: [],
   }
 }

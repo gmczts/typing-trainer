@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { recordActivity } from '../core/activity'
 import { loadProgress, saveProgress } from '../core/storage'
 import {
   WORDS_PER_LEVEL,
@@ -129,7 +130,22 @@ export function usePractice({ adapter, level, random, focusWordId, onLevelComple
       for (const entry of finalWrong) {
         progress.wrongWords[entry.word.id] = (progress.wrongWords[entry.word.id] ?? 0) + 1
       }
+      // v8: mastery — words answered correctly first try become
+      // "learning" (1, unless already "known"); words answered wrong
+      // (or with the answer revealed) count as seen (1) and drop back
+      // from "known" (2) if they were.
+      const wrongIds = new Set(finalWrong.map((e) => e.word.id))
+      progress.mastery = { ...(progress.mastery ?? {}) }
+      for (const w of order) {
+        if (wrongIds.has(w.id)) {
+          progress.mastery[w.id] = 1
+        } else if ((progress.mastery[w.id] ?? 0) < 1) {
+          progress.mastery[w.id] = 1
+        }
+      }
       saveProgress(adapter.id, progress)
+      // v8: daily activity log (home dashboard streak / goal / chart).
+      recordActivity(adapter.id, total)
       setElapsed(seconds)
       setPhase('summary')
       onLevelComplete(progress, result)
