@@ -6,8 +6,10 @@ import {
   ChevronDown,
   Eye,
   Home,
+  Maximize2,
   RotateCcw,
   Shuffle,
+  X,
 } from 'lucide-react'
 import { usePractice } from '../hooks/usePractice'
 import { useVisualViewportHeight } from '../hooks/useVisualViewport'
@@ -17,6 +19,7 @@ import { cn } from '../lib/utils'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
 import { KeyboardHint } from './KeyboardHint'
+import sgpbKeymapUrl from '../assets/sgpb-keymap.png'
 import { Progress } from './ui/progress'
 
 /**
@@ -164,14 +167,41 @@ export function PracticeScreen({
     (areaHeight > 0 && areaHeight < COMPACT_AREA_HEIGHT) ||
     (inputFocused && isCoarsePointer)
 
-  /** Keyboard-hint panel (Cantonese SGPB / Korean 두벌식 only — the
-   *  other languages type plain Latin letters and get no panel).
-   *  Rendered from the adapter's existing keymapGroups via
-   *  <KeyboardHint>; no duplicated data, no static image.
+  /** Keyboard-hint panel — Korean 두벌식 only, rendered from the
+   *  adapter's existing keymapGroups via <KeyboardHint>; no
+   *  duplicated data, no static image. Cantonese used to share this
+   *  panel (v8.1) but it could not show every key, so Cantonese now
+   *  uses the SGPB-鍵位圖.png image instead (thumbnail + lightbox,
+   *  see showKeymapImage below). The other languages type plain
+   *  Latin letters and get no panel.
    *  Default: expanded on desktop (fine pointer), collapsed on phones
    *  (coarse pointer) so the v6 keyboard layout is untouched. */
-  const hasKeyboardHint = adapter.id === 'cantonese' || adapter.id === 'korean'
+  const hasKeyboardHint = adapter.id === 'korean'
   const [showKeyboard, setShowKeyboard] = useState(() => !isCoarsePointer)
+
+  /** Cantonese keymap image (SGPB-鍵位圖.png, 1080×980, bundled via
+   *  import so Vite emits a hashed asset). Thumbnail in the header;
+   *  tap to open the lightbox. Korean keeps the rendered panel. */
+  const showKeymapImage = adapter.id === 'cantonese'
+  const [keymapOpen, setKeymapOpen] = useState(false)
+
+  // Lightbox: Esc closes; body scroll is locked while open (the image
+  // itself scrolls inside the overlay). Native pinch zoom is untouched
+  // — the viewport meta sets no maximum-scale or user-scalable
+  // restriction, and nothing here calls preventDefault on touch input.
+  useEffect(() => {
+    if (!keymapOpen) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setKeymapOpen(false)
+    }
+    document.addEventListener('keydown', onKey)
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      document.body.style.overflow = prevOverflow
+    }
+  }, [keymapOpen])
 
   // Refocus the fresh input whenever the word changes.
   useEffect(() => {
@@ -297,6 +327,26 @@ export function PracticeScreen({
         >
           <Shuffle className="h-4 w-4" />
         </Button>
+        {/* Cantonese keymap thumbnail (top-right): tap to open the
+            full SGPB-鍵位圖.png in a lightbox. */}
+        {showKeymapImage && (
+          <button
+            type="button"
+            onClick={() => setKeymapOpen(true)}
+            aria-label="放大鍵位圖"
+            title="撳一下放大鍵位圖"
+            className="relative shrink-0 overflow-hidden rounded-md border shadow-sm transition-transform hover:scale-[1.03]"
+          >
+            <img
+              src={sgpbKeymapUrl}
+              alt="SGPB 粵語雙拼鍵位圖（縮圖）"
+              className="h-14 w-16 object-contain"
+            />
+            <span className="absolute bottom-0.5 right-0.5 flex h-4 w-4 items-center justify-center rounded-sm bg-black/60 text-white">
+              <Maximize2 className="h-3 w-3" />
+            </span>
+          </button>
+        )}
       </div>
 
       {/* Word card — scrolls if the screen is short. On desktop the
@@ -434,7 +484,7 @@ export function PracticeScreen({
             <Eye className="h-3.5 w-3.5" /> 睇答案
           </Button>
         </div>
-        {/* Keyboard-hint toggle + panel (Cantonese / Korean only).
+        {/* Keyboard-hint toggle + panel (Korean only).
             The toggle uses onMouseDown preventDefault on desktop so the
             input keeps focus and the user can keep typing while
             opening/closing the hint. On phones there is no
@@ -451,7 +501,7 @@ export function PracticeScreen({
             className="mt-2 flex w-full items-center justify-between rounded-lg border bg-card px-3 py-2 text-sm font-medium text-muted-foreground"
           >
             <span>
-              ⌨️ 鍵盤提示{adapter.id === 'cantonese' ? ' · SGPB' : ' · 두벌식'}
+              ⌨️ 鍵盤提示 · 두벌식
             </span>
             <ChevronDown
               className={cn('h-4 w-4 transition-transform', showKeyboard && 'rotate-180')}
@@ -464,6 +514,40 @@ export function PracticeScreen({
           </div>
         )}
       </div>
+
+      {/* Cantonese keymap lightbox — the full SGPB-鍵位圖.png
+          (1080×980). The image fits the viewport width; the overlay
+          scrolls so the whole diagram is reachable, and native pinch
+          zoom is not blocked (no touch-action overrides, no
+          preventDefault on touch input). Close via ✕, backdrop click,
+          or Esc. */}
+      {showKeymapImage && keymapOpen && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="SGPB 粵語雙拼鍵位圖"
+          className="fixed inset-0 z-50 overflow-y-auto bg-black/85 p-4"
+          onClick={() => setKeymapOpen(false)}
+        >
+          <button
+            type="button"
+            onClick={() => setKeymapOpen(false)}
+            aria-label="閂返"
+            autoFocus
+            className="fixed right-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white text-black shadow-lg"
+          >
+            <X className="h-5 w-5" />
+          </button>
+          <div className="mx-auto flex min-h-full w-fit max-w-full items-center justify-center">
+            <img
+              src={sgpbKeymapUrl}
+              alt="SGPB 粵語雙拼鍵位圖"
+              className="h-auto w-full max-w-[1080px] rounded-lg"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>
+        </div>
+      )}
     </div>
   )
 }
