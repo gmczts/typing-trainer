@@ -3,6 +3,7 @@ import {
   ArrowLeft,
   ArrowRight,
   Check,
+  ChevronDown,
   Eye,
   Home,
   RotateCcw,
@@ -15,6 +16,7 @@ import { levelCountFor } from '../core/types'
 import { cn } from '../lib/utils'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
+import { KeyboardHint } from './KeyboardHint'
 import { Progress } from './ui/progress'
 
 /**
@@ -162,11 +164,30 @@ export function PracticeScreen({
     (areaHeight > 0 && areaHeight < COMPACT_AREA_HEIGHT) ||
     (inputFocused && isCoarsePointer)
 
+  /** Keyboard-hint panel (Cantonese SGPB / Korean 두벌식 only — the
+   *  other languages type plain Latin letters and get no panel).
+   *  Rendered from the adapter's existing keymapGroups via
+   *  <KeyboardHint>; no duplicated data, no static image.
+   *  Default: expanded on desktop (fine pointer), collapsed on phones
+   *  (coarse pointer) so the v6 keyboard layout is untouched. */
+  const hasKeyboardHint = adapter.id === 'cantonese' || adapter.id === 'korean'
+  const [showKeyboard, setShowKeyboard] = useState(() => !isCoarsePointer)
+
   // Refocus the fresh input whenever the word changes.
   useEffect(() => {
     setValue('')
     inputRef.current?.focus()
   }, [session.index, sessionId])
+
+  // Phones: collapse the hint panel as soon as the input is focused
+  // (OS keyboard up). The panel sits below the input; keeping it open
+  // would squeeze the word card out of the visible area, so collapsing
+  // restores the v6 layout exactly and the word stays fully visible.
+  // Desktop is unaffected (isCoarsePointer is false there). The user
+  // can re-open the panel any time the keyboard is dismissed.
+  useEffect(() => {
+    if (inputFocused && isCoarsePointer) setShowKeyboard(false)
+  }, [inputFocused, isCoarsePointer])
 
   if (!word) return null
 
@@ -413,6 +434,35 @@ export function PracticeScreen({
             <Eye className="h-3.5 w-3.5" /> 睇答案
           </Button>
         </div>
+        {/* Keyboard-hint toggle + panel (Cantonese / Korean only).
+            The toggle uses onMouseDown preventDefault on desktop so the
+            input keeps focus and the user can keep typing while
+            opening/closing the hint. On phones there is no
+            preventDefault: tapping the toggle blurs the input, the OS
+            keyboard dismisses, and the panel becomes visible — and the
+            auto-collapse effect above re-hides it as soon as the input
+            is focused again, so the v6 compact layout is never broken. */}
+        {hasKeyboardHint && (
+          <button
+            type="button"
+            onMouseDown={isCoarsePointer ? undefined : (e) => e.preventDefault()}
+            onClick={() => setShowKeyboard((v) => !v)}
+            aria-expanded={showKeyboard}
+            className="mt-2 flex w-full items-center justify-between rounded-lg border bg-card px-3 py-2 text-sm font-medium text-muted-foreground"
+          >
+            <span>
+              ⌨️ 鍵盤提示{adapter.id === 'cantonese' ? ' · SGPB' : ' · 두벌식'}
+            </span>
+            <ChevronDown
+              className={cn('h-4 w-4 transition-transform', showKeyboard && 'rotate-180')}
+            />
+          </button>
+        )}
+        {hasKeyboardHint && showKeyboard && (
+          <div className="mt-2">
+            <KeyboardHint adapter={adapter} />
+          </div>
+        )}
       </div>
     </div>
   )
